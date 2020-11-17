@@ -4,7 +4,7 @@ set -e
 
 source config
 
-VARS=
+VARS=""
 
 while IFS= read -r line; do
   if [[ $line != "" && $line != \#* ]]; then
