@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 source config
-./digester test.csv
+
+VARS=
+
+while IFS= read -r line; do
+  if [[ $line != "" && $line != \#* ]]; then
+    V="${line//=*/}"
+    VARS="$VARS ${V}=${!V}"
+  fi
+done < config
+
+$(VARS) ./digester test.csv
