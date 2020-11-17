@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strings"
 
 	docker "docker.io/go-docker"
 )
@@ -137,11 +138,18 @@ func writeEnvFile(images []*Image) error {
 	}
 	defer f.Close()
 	writer := bufio.NewWriter(f)
-	for _, image := range images[1:] {
-		_, err = writer.WriteString(fmt.Sprintf("%s=%s@sha256:%s\n", image.EnvVar, image.Name, image.Digest))
+	imageList := make([]string, len(images) - 1, len(images) - 1)
+	for i, image := range images[1:] {
+		imageDigest := fmt.Sprintf("%s@sha256:%s", image.Name, image.Digest)
+		_, err = writer.WriteString(fmt.Sprintf("%s=%s\n", image.EnvVar, imageDigest))
 		if err != nil {
 			return err
 		}
+		imageList[i] = imageDigest
+	}
+	_, err = writer.WriteString("DIGEST_LIST=" + strings.Join(imageList, ","))
+	if err != nil {
+		return err
 	}
 
 	return writer.Flush()
