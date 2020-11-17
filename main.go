@@ -1,5 +1,7 @@
 package main
 
+// This tool maintain the deploy/images.csv and the deploy/images.env file, to be used to generate the CSV
+
 import (
 	"bufio"
 	"context"
@@ -17,10 +19,10 @@ const (
 )
 
 type Image struct {
-	EnvVar string `csv:"envVar,omitempty"`
-	Name   string `csv:"name,omitempty"`
-	Tag    string `csv:"tag,omitempty"`
-	Digest string `csv:"digest,omitempty"`
+	EnvVar string
+	Name   string
+	Tag    string
+	Digest string
 }
 
 func (i Image) getArr() []string {
@@ -30,6 +32,20 @@ func (i Image) getArr() []string {
 		i.Tag,
 		i.Digest,
 	}
+}
+
+func NewImage(fields []string) *Image {
+	image := &Image{
+		EnvVar: fields[0],
+		Name:   fields[1],
+		Tag:    fields[2],
+	}
+
+	if len(fields) > 3 {
+		image.Digest = fields[3]
+	}
+
+	return image
 }
 
 func (i *Image) setDigest(digest string) {
@@ -59,15 +75,7 @@ func main() {
 
 	images := make([]*Image, 0, len(lines))
 	for _, line := range lines {
-		image := &Image{
-			EnvVar: line[0],
-			Name:   line[1],
-			Tag:    line[2],
-		}
-		if len(line) > 3 {
-			image.Digest = line[3]
-		}
-		images = append(images, image)
+		images = append(images, NewImage(line))
 	}
 
 	cli, err := docker.NewEnvClient()
@@ -100,12 +108,13 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		if err = writeEnvFile(images); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
 	} else {
 		fmt.Println("The images file is up to date")
+	}
+
+	if err = writeEnvFile(images); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 }
