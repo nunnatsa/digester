@@ -46,7 +46,7 @@ jobs:
           Update Images
 
           Signed-off-by: HCO Bump Bot <noreply@github.com>
-        committer: HCO Bump Bot <noreply@github.com>
+        committer: Nahshon Unna-Tsameret <nunnatsa@redhat.com>
         title: "Update Image digests"
         body: |
           Update Image digests
