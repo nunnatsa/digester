@@ -138,7 +138,7 @@ func writeEnvFile(images []*Image) error {
 	}
 	defer f.Close()
 	writer := bufio.NewWriter(f)
-	imageList := make([]string, len(images) - 1, len(images) - 1)
+	imageList := make([]string, len(images)-1, len(images)-1)
 	for i, image := range images[1:] {
 		imageDigest := fmt.Sprintf("%s@sha256:%s", image.Name, image.Digest)
 		_, err = writer.WriteString(fmt.Sprintf("%s=%s\n", image.EnvVar, imageDigest))
@@ -147,7 +147,7 @@ func writeEnvFile(images []*Image) error {
 		}
 		imageList[i] = imageDigest
 	}
-	_, err = writer.WriteString("DIGEST_LIST=" + strings.Join(imageList, ","))
+	_, err = writer.WriteString(fmt.Sprintf("DIGEST_LIST=%s\n", strings.Join(imageList, ",")))
 	if err != nil {
 		return err
 	}
