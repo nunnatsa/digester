@@ -4,13 +4,11 @@ set -ex
 
 source config
 
-VARS=""
-
 while IFS= read -r line; do
   if [[ $line != "" && $line != \#* ]]; then
     V="${line//=*/}"
-    VARS="$VARS ${V}=${!V}"
+    export "${V}=${!V}"
   fi
 done < config
 
-$(VARS) ./digester test.csv
+./digester test.csv
