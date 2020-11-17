@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -9,14 +10,21 @@ import (
 	docker "docker.io/go-docker"
 )
 
+const (
+	csvFile = "deploy/images.csv"
+	envFile = "deploy/images.env"
+)
+
 type Image struct {
-	Name   string `csv:"name,emitempty"`
-	Tag    string `csv:"tag,emitempty"`
-	Digest string `csv:"digest,emitempty"`
+	EnvVar string `csv:"envVar,omitempty"`
+	Name   string `csv:"name,omitempty"`
+	Tag    string `csv:"tag,omitempty"`
+	Digest string `csv:"digest,omitempty"`
 }
 
 func (i Image) getArr() []string {
 	return []string{
+		i.EnvVar,
 		i.Name,
 		i.Tag,
 		i.Digest,
@@ -28,15 +36,8 @@ func (i *Image) setDigest(digest string) {
 }
 
 func main() {
-
-	if len(os.Args) != 2 {
-		fmt.Printf("usage %s {CSV File name}\n", os.Args[0])
-		os.Exit(1)
-	}
-
-	fileName := os.Args[1]
 	fmt.Println("Checking image digests")
-	f, err := os.Open(fileName)
+	f, err := os.Open(csvFile)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -58,11 +59,12 @@ func main() {
 	images := make([]*Image, 0, len(lines))
 	for _, line := range lines {
 		image := &Image{
-			Name: line[0],
-			Tag:  line[1],
+			EnvVar: line[0],
+			Name:   line[1],
+			Tag:    line[2],
 		}
-		if len(line) > 2 {
-			image.Digest = line[2]
+		if len(line) > 3 {
+			image.Digest = line[3]
 		}
 		images = append(images, image)
 	}
@@ -74,7 +76,7 @@ func main() {
 	}
 
 	changed := false
-	for _, image := range images {
+	for _, image := range images[1:] {
 		fullName := fmt.Sprintf("%s:%s", image.Name, os.Getenv(image.Tag))
 		fmt.Printf("Reading digest for %s\n", fullName)
 		inspect, err := cli.DistributionInspect(context.Background(), fullName, "")
@@ -93,22 +95,11 @@ func main() {
 
 	if changed {
 		fmt.Println("Found new digests. Updating the file")
-		f, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE, 0755)
-		if err != nil {
+		if err = writeCsv(images); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		defer f.Close()
-
-		writer := csv.NewWriter(f)
-
-		lines := make([][]string, 0, len(images))
-		for _, image := range images {
-			lines = append(lines, image.getArr())
-		}
-
-		err = writer.WriteAll(lines)
-		if err != nil {
+		if err = writeEnvFile(images); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -116,4 +107,42 @@ func main() {
 		fmt.Println("The images file is up to date")
 	}
 
+}
+
+func writeCsv(images []*Image) error {
+	f, err := os.OpenFile(csvFile, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	writer := csv.NewWriter(f)
+
+	lines := make([][]string, 0, len(images))
+	for _, image := range images {
+		lines = append(lines, image.getArr())
+	}
+
+	err = writer.WriteAll(lines)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeEnvFile(images []*Image) error {
+	f, err := os.OpenFile(envFile, os.O_RDWR|os.O_CREATE, 0755)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	writer := bufio.NewWriter(f)
+	for _, image := range images[1:] {
+		_, err = writer.WriteString(fmt.Sprintf("%s=%s@sha256:%s\n", image.EnvVar, image.Name, image.Digest))
+		if err != nil {
+			return err
+		}
+	}
+
+	return writer.Flush()
 }
