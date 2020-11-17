@@ -31,4 +31,4 @@ jobs:
       run: go build -v .
 
     - name: Run
-      run: ./digester test.csv
+      run: ./run.sh
