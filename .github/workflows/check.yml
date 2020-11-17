@@ -31,4 +31,32 @@ jobs:
       run: go build -v .
 
     - name: Run
-      run: ./run.sh
+      run: ./update_images.sh
+
+    - name: Set Branch Name
+      run: |
+        echo 'BRANCH_NAME<<EOF' >> $GITHUB_ENV
+        echo "Update_Image_Digest_$(date --utc +%s)" >> $GITHUB_ENV
+        echo 'EOF' >> $GITHUB_ENV
+
+    - uses: peter-evans/create-pull-request@v2
+      with:
+        token: ${{ secrets.BOT_SECRET }}
+        commit-message: |
+          Update Images
+
+          Signed-off-by: HCO Bump Bot <noreply@github.com>
+        committer: HCO Bump Bot <noreply@github.com>
+        title: "Update Image digests"
+        body: |
+          Update Image digests
+
+          Executed by HCO Release-Bumper Bot.
+
+          ```release-note
+          Update Image digests
+          ```
+        assignees: nunnatsa
+        reviewers: nunnatsa
+        team-reviewers: owners, maintainers
+        branch: $BRANCH_NAME
