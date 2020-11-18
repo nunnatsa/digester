@@ -33,6 +33,9 @@ jobs:
     - name: Run
       run: ./update_images.sh
 
+    - name: Regenerage
+      run: ./pull_request.sh
+
     - uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ secrets.BOT_SECRET }}
