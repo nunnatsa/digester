@@ -34,7 +34,11 @@ jobs:
       run: ./update_images.sh
 
     - name: Regenerage
-      run: ./pull_request.sh
+      run: |
+        if ! git diff --quiet --exit-code; then
+          echo "$(date +%Y-%m-%dT%H:%M:%S)" > a.txt
+          git add a.txt
+        fi
 
     - uses: peter-evans/create-pull-request@v3
       with:
