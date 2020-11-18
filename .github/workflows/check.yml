@@ -33,12 +33,6 @@ jobs:
     - name: Run
       run: ./update_images.sh
 
-    - name: Set Branch Name
-      run: |
-        echo 'BRANCH_NAME<<EOF' >> $GITHUB_ENV
-        echo "Update_Image_Digest_$(date --utc +%s)" >> $GITHUB_ENV
-        echo 'EOF' >> $GITHUB_ENV
-
     - uses: peter-evans/create-pull-request@v3
       with:
         token: ${{ secrets.BOT_SECRET }}
@@ -59,5 +53,6 @@ jobs:
         assignees: nunnatsa
         reviewers: nunnatsa
         team-reviewers: owners, maintainers
-        branch: ${{ env.BRANCH_NAME }}
+        branch: Update_Image_Digest
         delete-branch: true
+        signoff: true
