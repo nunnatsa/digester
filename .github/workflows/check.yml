@@ -60,3 +60,4 @@ jobs:
         reviewers: nunnatsa
         team-reviewers: owners, maintainers
         branch: $BRANCH_NAME
+        delete-branch: true
