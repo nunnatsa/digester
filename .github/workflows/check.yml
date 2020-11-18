@@ -38,8 +38,6 @@ jobs:
         token: ${{ secrets.BOT_SECRET }}
         commit-message: |
           Update Images
-
-          Signed-off-by: HCO Bump Bot <noreply@github.com>
         committer: Nahshon Unna-Tsameret <nunnatsa@redhat.com>
         title: "Update Image digests"
         body: |
