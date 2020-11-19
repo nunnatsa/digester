@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	docker "docker.io/go-docker"
 )
@@ -94,28 +95,31 @@ func main() {
 		fullName string
 	}
 
-	ch := make(chan message, len(images) - 1)
+	ch := make(chan message, len(images)-1)
 
 	go func() {
 		wg.Wait()
 		close(ch)
 	}()
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	start := time.Now()
 	for i, image := range images[1:] {
 		go func(image *Image, index int) {
 			fullName := fmt.Sprintf("%s:%s", image.Name, os.Getenv(image.Tag))
 			fmt.Printf("Reading digest for %s\n", fullName)
-			inspect, err := cli.DistributionInspect(context.Background(), fullName, "")
+			inspect, err := cli.DistributionInspect(ctx, fullName, "")
 			if err != nil {
-				fmt.Println(err)
+				fmt.Printf("Error while trying to get digest for %s; %s\n", fullName, err)
 				os.Exit(1)
 			}
 
 			digest := inspect.Descriptor.Digest.Hex()
 			ch <- message{index: index, digest: digest, fullName: fullName}
 			wg.Done()
-		}(image, i + 1)
-
+		}(image, i+1)
 	}
 
 	changed := false
@@ -127,6 +131,8 @@ func main() {
 		}
 	}
 
+	howLong := time.Now().Sub(start)
+	fmt.Println("took", howLong)
 	if changed {
 		fmt.Println("Found new digests. Updating the file")
 		if err = writeCsv(images); err != nil {
