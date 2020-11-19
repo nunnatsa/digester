@@ -53,8 +53,8 @@ jobs:
 
     - name: a and b
       run: |
-        echo ${{ AAA }}
-        echo ${{ BBB }}
+        echo $AAA
+        echo $BBB
 
     - uses: peter-evans/create-pull-request@v3
       if: ${{ env.CHANGED }}
