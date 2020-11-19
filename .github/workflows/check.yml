@@ -43,18 +43,30 @@ jobs:
           echo 'AAA<<EOF' >> $GITHUB_ENV
           cat a.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+          A_EXISTS=true
         fi
 
         if [[ -f b.txt ]]; then
           echo 'BBB<<EOF' >> $GITHUB_ENV
           cat b.txt >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+          B_EXISTS=true
+        fi
+
+        if [[ -n ${A_EXISTS} && -n ${B_EXISTS} ]]; then
+          echo "A_AND_B=true" >> $GITHUB_ENV
+        fi
+
+        if [[ -n ${A_EXISTS} || -n ${B_EXISTS} ]]; then
+          echo "A_OR_B=true" >> $GITHUB_ENV
         fi
 
     - name: a and b
       run: |
-        echo $AAA
-        echo $BBB
+        echo ${{ env.AAA }}
+        echo ${{ env.BBB }}
+        echo ${{ env.A_AND_B }}
+        echo ${{ env.A_OR_B }}
 
     - uses: peter-evans/create-pull-request@v3
       if: ${{ env.CHANGED }}
