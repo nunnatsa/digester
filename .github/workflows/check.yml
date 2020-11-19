@@ -39,11 +39,22 @@ jobs:
           echo "CHANGED=true" >> $GITHUB_ENV
         fi
 
-    - name: reproduce no file issue
+        if [[ -f a.txt ]]; then
+          echo 'AAA<<EOF' >> $GITHUB_ENV
+          cat a.txt >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+        fi
+
+        if [[ -f b.txt ]]; then
+          echo 'BBB<<EOF' >> $GITHUB_ENV
+          cat b.txt >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+        fi
+
+    - name: a and b
       run: |
-        echo 'UPDATED_COMPONENT<<EOF' >> $GITHUB_ENV
-        cat updated_component.txt >> $GITHUB_ENV
-        echo 'EOF' >> $GITHUB_ENV
+        echo ${{ AAA }}
+        echo ${{ BBB }}
 
     - uses: peter-evans/create-pull-request@v3
       if: ${{ env.CHANGED }}
