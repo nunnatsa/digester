@@ -36,11 +36,11 @@ jobs:
     - name: Regenerage
       run: |
         if ! git diff --quiet --exit-code; then
-          echo "$(date +%Y-%m-%dT%H:%M:%S)" > a.txt
-          git add a.txt
+          echo "CHANGED=true" >> $GITHUB_ENV
         fi
 
     - uses: peter-evans/create-pull-request@v3
+      if: {{ env.CHANGED == "true" }}
       with:
         token: ${{ secrets.BOT_SECRET }}
         commit-message: |
