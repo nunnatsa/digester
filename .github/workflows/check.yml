@@ -40,7 +40,7 @@ jobs:
         fi
 
     - uses: peter-evans/create-pull-request@v3
-      if: {{ env.CHANGED == "true" }}
+      if: {{ env.CHANGED }}
       with:
         token: ${{ secrets.BOT_SECRET }}
         commit-message: |
