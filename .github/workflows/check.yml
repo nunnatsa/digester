@@ -40,7 +40,7 @@ jobs:
         fi
 
     - name: Check working dir
-      working_directory: .github/workflows
+      working-directory: .github/workflows
       run: cat check.yml
 
     - uses: peter-evans/create-pull-request@v3
