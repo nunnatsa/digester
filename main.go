@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	docker "docker.io/go-docker"
 )
@@ -84,21 +85,45 @@ func main() {
 		os.Exit(1)
 	}
 
-	changed := false
-	for _, image := range images[1:] {
-		fullName := fmt.Sprintf("%s:%s", image.Name, os.Getenv(image.Tag))
-		fmt.Printf("Reading digest for %s\n", fullName)
-		inspect, err := cli.DistributionInspect(context.Background(), fullName, "")
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+	wg := &sync.WaitGroup{}
+	wg.Add(len(images) - 1) // the first "image" is the CSV title
 
-		digest := inspect.Descriptor.Digest.Hex()
-		if image.Digest != digest {
+	type message struct {
+		index    int
+		digest   string
+		fullName string
+	}
+
+	ch := make(chan message, len(images) - 1)
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	for i, image := range images[1:] {
+		go func(image *Image, index int) {
+			fullName := fmt.Sprintf("%s:%s", image.Name, os.Getenv(image.Tag))
+			fmt.Printf("Reading digest for %s\n", fullName)
+			inspect, err := cli.DistributionInspect(context.Background(), fullName, "")
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			digest := inspect.Descriptor.Digest.Hex()
+			ch <- message{index: index, digest: digest, fullName: fullName}
+			wg.Done()
+		}(image, i + 1)
+
+	}
+
+	changed := false
+	for msg := range ch {
+		if images[msg.index].Digest != msg.digest {
 			changed = true
-			fmt.Printf("New digest for %s - %s\n", fullName, digest)
-			image.setDigest(digest)
+			fmt.Printf("New digest for %s - %s\n", msg.fullName, msg.digest)
+			images[msg.index].setDigest(msg.digest)
 		}
 	}
 
