@@ -39,6 +39,10 @@ jobs:
           echo "CHANGED=true" >> $GITHUB_ENV
         fi
 
+    - name: Check working dir
+      working_directory: .github/workflows
+      run: cat check.yml
+
     - uses: peter-evans/create-pull-request@v3
       if: ${{ env.CHANGED }}
       with:
