@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Test Aborting
 
 # Controls when the action will run. 
 on:
@@ -22,14 +22,19 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Condition
-        run: |- 
-          MY_VAR="true"
-          if [[ -n ${MY_VAR} ]]; then
-            exit 0
-          fi
+        run: |-
+          echo "NEW_PR=true" >> $GITHUB_ENV
 
       # Runs a set of commands using the runners shell
-      - name: Hello
+      - name: Hello 1
+        if: ${{ env.NEW_PR == true }}
         run: |
           echo Hello,
+          echo We shouldn't get here
+          echo "OPTIONAL=true" >> $GITHUB_ENV
+
+      # Runs a set of commands using the runners shell
+      - name: Hello 2
+        if: ${{ env.OPTIONAL == "true" }}
+        run: |
           echo We shouldn't get here
