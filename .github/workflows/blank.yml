@@ -30,11 +30,11 @@ jobs:
         if: ${{ env.NEW_PR == true }}
         run: |
           echo Hello,
-          echo We shouldn't get here
+          echo We shouldn\'t get here
           echo "OPTIONAL=true" >> $GITHUB_ENV
 
       # Runs a set of commands using the runners shell
       - name: Hello 2
         if: ${{ env.OPTIONAL == "true" }}
         run: |
-          echo We shouldn't get here
+          echo We shouldn\'t get here
