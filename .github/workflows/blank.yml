@@ -17,24 +17,27 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: check for existing PR
+        run: |-
+          if curl -s -L  https://api.github.com/repos/kubevirt/hyperconverged-cluster-operator/pulls | jq .[].title | grep -q "Update Image Digests"; then
+            echo "There is an existing PR with name 'Update Image Digests'; skipping; To run again, close the existing PR"
+            echo "NO_NEW_PR=true" >> $GITHUB_ENV
+          else
+            echo "NEW_PR=true" >> $GITHUB_ENV
+          fi
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: Condition
-        run: |-
-          echo "NO_NEW_PR=true" >> $GITHUB_ENV
+        if: ${{ env.NEW_PR }}
 
       # Runs a set of commands using the runners shell
       - name: Hello 1
         if: ${{ env.NEW_PR }}
         run: |
-          echo Hello,
-          echo We shouldn\'t get here
-          echo "OPTIONAL=true" >> $GITHUB_ENV
+          echo PR not exist yet
 
       # Runs a set of commands using the runners shell
       - name: Hello 2
-        if: ${{ env.OPTIONAL }}
+        if: ${{ env.NO_NEW_PR }}
         run: |
-          echo We shouldn\'t get here
+          echo PR already exists
