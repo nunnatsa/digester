@@ -27,7 +27,7 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Hello 1
-        if: ${{ env.NEW_PR == true }}
+        if: ${{ env.NEW_PR }}
         run: |
           echo Hello,
           echo We shouldn\'t get here
@@ -35,6 +35,6 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Hello 2
-        if: ${{ env.OPTIONAL == "true" }}
+        if: ${{ env.OPTIONAL }}
         run: |
           echo We shouldn\'t get here
